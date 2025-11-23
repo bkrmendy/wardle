@@ -1,60 +1,125 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
+import { useState, useEffect, useCallback } from 'react'
 import { Header } from '@/components/Header'
-import { encodeWord, getRandomWord } from '@/utils/game'
+import { Keyboard } from '@/components/Keyboard'
+import { Tile } from '@/components/Tile'
+import { encodeWord, isValidWord } from '@/utils/game'
 import { WORDS } from '@/data/words'
 
 export const Route = createFileRoute('/')({ component: Index })
 
 function Index() {
-  const navigate = useNavigate()
+  const [currentWord, setCurrentWord] = useState('')
+  const [copied, setCopied] = useState(false)
 
-  const playRandomChallenge = () => {
-    const randomWord = getRandomWord(WORDS)
-    const encodedWord = encodeWord(randomWord)
-    navigate({ to: '/challenge/$word', params: { word: encodedWord } })
+  const isValid = currentWord.length === 5 && isValidWord(currentWord, WORDS)
+
+  const challengeUrl = isValid
+    ? `${window.location.origin}/challenge/${encodeWord(currentWord)}`
+    : ''
+
+  const addLetter = useCallback((letter: string) => {
+    setCurrentWord((prev) => {
+      if (prev.length >= 5) return prev
+      return prev + letter.toLowerCase()
+    })
+    setCopied(false)
+  }, [])
+
+  const deleteLetter = useCallback(() => {
+    setCurrentWord((prev) => prev.slice(0, -1))
+    setCopied(false)
+  }, [])
+
+  const handleKeyPress = (key: string) => {
+    if (key === 'ENTER') {
+      // Do nothing on enter
+    } else if (key === 'BACK') {
+      deleteLetter()
+    } else {
+      addLetter(key)
+    }
   }
 
-  const createChallenge = () => {
-    navigate({ to: '/create' })
+  // Handle physical keyboard
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Backspace') {
+        deleteLetter()
+      } else if (/^[a-z]$/i.test(e.key)) {
+        addLetter(e.key)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [addLetter, deleteLetter])
+
+  const handleCopy = async () => {
+    if (challengeUrl) {
+      await navigator.clipboard.writeText(challengeUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
   }
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 flex flex-col items-center justify-center px-4 pb-20">
-        <div className="max-w-md w-full space-y-6">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold mb-2">Welcome to Wardle!</h2>
-            <p className="text-gray-600">
-              Challenge your friends or play a random word
-            </p>
+      <main className="flex-1 flex flex-col items-center justify-between max-w-lg mx-auto w-full px-4 pb-4">
+        <div className="w-full">
+          <h2 className="text-2xl font-bold mb-6 text-center">
+            Create a Challenge
+          </h2>
+
+          {/* Word display */}
+          <div className="flex gap-1.5 justify-center mb-6">
+            {Array.from({ length: 5 }, (_, i) => (
+              <Tile
+                key={i}
+                letter={currentWord[i] || ''}
+                state={currentWord[i] ? 'tbd' : 'empty'}
+                index={i}
+              />
+            ))}
           </div>
 
-          <button
-            onClick={playRandomChallenge}
-            className="w-full px-8 py-4 bg-green-600 text-white rounded-lg font-bold text-lg hover:bg-green-700 transition-colors"
-          >
-            Play Random Word
-          </button>
-
-          <button
-            onClick={createChallenge}
-            className="w-full px-8 py-4 bg-blue-600 text-white rounded-lg font-bold text-lg hover:bg-blue-700 transition-colors"
-          >
-            Create Challenge
-          </button>
-
-          <div className="pt-6 border-t border-gray-300">
-            <h3 className="font-bold mb-2">How to play:</h3>
-            <ul className="text-sm text-gray-700 space-y-1">
-              <li>• Guess the 5-letter word in 6 tries</li>
-              <li>• Green = correct letter and position</li>
-              <li>• Yellow = correct letter, wrong position</li>
-              <li>• Gray = letter not in word</li>
-            </ul>
+          {/* Validation message */}
+          <div className="text-center mb-4 h-6">
+            {currentWord.length === 5 && !isValid && (
+              <p className="text-red-600 font-semibold">Not in word list</p>
+            )}
+            {isValid && (
+              <p className="text-green-600 font-semibold">Valid word!</p>
+            )}
           </div>
         </div>
+
+        {/* Copy challenge URL */}
+        <div className="w-full space-y-4 mb-6">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={challengeUrl}
+              readOnly
+              className="flex-1 px-4 py-2 border-2 border-gray-300 rounded bg-gray-50 text-sm"
+            />
+            <button
+              onClick={handleCopy}
+              disabled={!isValid}
+              className={`px-6 py-2 rounded font-semibold whitespace-nowrap transition-colors ${
+                isValid
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              {copied ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+        </div>
+
+        <Keyboard onKeyPress={handleKeyPress} letterStates={{}} />
       </main>
     </div>
   )
