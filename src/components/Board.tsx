@@ -1,6 +1,5 @@
 import { Tile } from './Tile'
-
-type LetterState = 'correct' | 'present' | 'absent'
+import type { LetterState } from '@/types/game'
 
 interface GuessResult {
   guess: string
@@ -14,7 +13,12 @@ interface BoardProps {
   shake?: boolean
 }
 
-export function Board({ guesses, currentGuess, currentRow, shake = false }: BoardProps) {
+export function Board({
+  guesses,
+  currentGuess,
+  currentRow,
+  shake = false,
+}: BoardProps) {
   const rows = Array.from({ length: 6 }, (_, rowIndex) => {
     // If this is a completed guess row
     if (rowIndex < guesses.length) {

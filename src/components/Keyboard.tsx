@@ -1,4 +1,4 @@
-type KeyState = 'correct' | 'present' | 'absent' | 'unused'
+import type { KeyState } from '@/types/game'
 
 interface KeyboardProps {
   onKeyPress: (key: string) => void
@@ -13,7 +13,7 @@ const KEYBOARD_ROWS = [
 
 export function Keyboard({ onKeyPress, letterStates }: KeyboardProps) {
   const getKeyClass = (key: string) => {
-    const state = letterStates[key.toLowerCase()]
+    const state = letterStates[key.toLowerCase()] 
 
     const baseClass =
       'px-2 py-4 sm:px-4 rounded font-bold uppercase text-sm sm:text-base transition-colors active:scale-95'

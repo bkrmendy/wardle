@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react'
-import { checkGuess, isValidWord, getLetterStates } from '@/utils/game'
+import { useCallback, useState } from 'react'
+import type { LetterState } from '@/types/game'
+import { checkGuess, getLetterStates, isValidWord } from '@/utils/game'
 
-type LetterState = 'correct' | 'present' | 'absent'
 type GameStatus = 'playing' | 'won' | 'lost'
 
 interface GuessResult {

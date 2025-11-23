@@ -1,4 +1,4 @@
-type LetterState = 'correct' | 'present' | 'absent'
+import type { LetterState } from '@/types/game'
 
 /**
  * Check a guess against the answer and return the state of each letter
