@@ -70,50 +70,60 @@ function Challenge() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 flex flex-col items-center justify-between max-w-lg mx-auto w-full px-4 pb-4">
-        <Board
-          guesses={guesses}
-          currentGuess={currentGuess}
-          currentRow={currentRow}
-          shake={shake}
-        />
+      <main className="flex-1 flex flex-col max-w-lg mx-auto w-full px-4">
+        {/* Centered content */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-full space-y-6">
+            <Board
+              guesses={guesses}
+              currentGuess={currentGuess}
+              currentRow={currentRow}
+              shake={shake}
+            />
 
-        {error && (
-          <div className="text-red-600 font-semibold text-center py-2">
-            {error}
+            {error && (
+              <div className="text-red-600 font-semibold text-center">
+                {error}
+              </div>
+            )}
+
+            {gameStatus === 'won' && (
+              <div className="text-center">
+                <p className="text-2xl font-bold text-green-600 mb-4">
+                  You won! 🎉
+                </p>
+                <button
+                  onClick={() => navigate({ to: '/' })}
+                  className="px-6 py-2 bg-green-600 text-white rounded font-semibold hover:bg-green-700"
+                >
+                  Back to Home
+                </button>
+              </div>
+            )}
+
+            {gameStatus === 'lost' && (
+              <div className="text-center">
+                <p className="text-2xl font-bold text-red-600 mb-2">
+                  Game Over!
+                </p>
+                <p className="text-lg mb-4">
+                  The word was: <strong>{decodedWord.toUpperCase()}</strong>
+                </p>
+                <button
+                  onClick={() => navigate({ to: '/' })}
+                  className="px-6 py-2 bg-gray-600 text-white rounded font-semibold hover:bg-gray-700"
+                >
+                  Back to Home
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
-        {gameStatus === 'won' && (
-          <div className="text-center py-4">
-            <p className="text-2xl font-bold text-green-600 mb-2">
-              You won! 🎉
-            </p>
-            <button
-              onClick={() => navigate({ to: '/' })}
-              className="px-6 py-2 bg-green-600 text-white rounded font-semibold hover:bg-green-700"
-            >
-              Back to Home
-            </button>
-          </div>
-        )}
-
-        {gameStatus === 'lost' && (
-          <div className="text-center py-4">
-            <p className="text-2xl font-bold text-red-600 mb-2">Game Over!</p>
-            <p className="text-lg mb-3">
-              The word was: <strong>{decodedWord.toUpperCase()}</strong>
-            </p>
-            <button
-              onClick={() => navigate({ to: '/' })}
-              className="px-6 py-2 bg-gray-600 text-white rounded font-semibold hover:bg-gray-700"
-            >
-              Back to Home
-            </button>
-          </div>
-        )}
-
-        <Keyboard onKeyPress={handleKeyPress} letterStates={letterStates} />
+        {/* Keyboard at bottom */}
+        <div className="pb-4">
+          <Keyboard onKeyPress={handleKeyPress} letterStates={letterStates} />
+        </div>
       </main>
     </div>
   )
