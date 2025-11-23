@@ -126,9 +126,11 @@ function Challenge() {
         </div>
 
         {/* Keyboard at bottom */}
-        <div className="pb-4">
-          <Keyboard onKeyPress={handleKeyPress} letterStates={letterStates} />
-        </div>
+        {gameStatus === 'playing' && (
+          <div className="pb-4">
+            <Keyboard onKeyPress={handleKeyPress} letterStates={letterStates} />
+          </div>
+        )}
       </main>
     </div>
   )
