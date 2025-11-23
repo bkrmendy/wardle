@@ -1,41 +1,61 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Header } from '@/components/Header'
 import { Keyboard } from '@/components/Keyboard'
 import { Tile } from '@/components/Tile'
-import { encodeWord, isValidWord } from '@/utils/game'
+import { encodeChallengeData, isValidWord } from '@/utils/game'
 import { WORDS } from '@/data/words'
 
 export const Route = createFileRoute('/')({ component: Index })
 
 function Index() {
   const [currentWord, setCurrentWord] = useState('')
+  const [message, setMessage] = useState('')
   const [copied, setCopied] = useState(false)
+  const [isMessageFocused, setIsMessageFocused] = useState(false)
+  const messageInputRef = useRef<HTMLInputElement>(null)
 
   const isValid = currentWord.length === 5 && isValidWord(currentWord, WORDS)
 
   const challengeUrl = isValid
-    ? `${window.location.origin}/challenge/${encodeWord(currentWord)}`
+    ? `${window.location.origin}/challenge/${encodeChallengeData(currentWord, message)}`
     : ''
 
-  const addLetter = useCallback((letter: string) => {
-    setCurrentWord((prev) => {
-      if (prev.length >= 5) return prev
-      return prev + letter.toLowerCase()
-    })
-    setCopied(false)
-  }, [])
+  const addLetter = useCallback(
+    (letter: string) => {
+      // If message input is focused, add to message; otherwise add to word
+      if (isMessageFocused) {
+        setMessage((prev) => prev + letter.toLowerCase())
+      } else {
+        setCurrentWord((prev) => {
+          if (prev.length >= 5) return prev
+          return prev + letter.toLowerCase()
+        })
+      }
+      setCopied(false)
+    },
+    [isMessageFocused],
+  )
 
   const deleteLetter = useCallback(() => {
-    setCurrentWord((prev) => prev.slice(0, -1))
+    if (isMessageFocused) {
+      setMessage((prev) => prev.slice(0, -1))
+    } else {
+      setCurrentWord((prev) => prev.slice(0, -1))
+    }
     setCopied(false)
-  }, [])
+  }, [isMessageFocused])
 
   const handleKeyPress = (key: string) => {
     if (key === 'ENTER') {
       // Do nothing on enter
     } else if (key === 'BACK') {
       deleteLetter()
+    } else if (key === 'SPACE') {
+      if (isMessageFocused) {
+        setMessage((prev) => prev + ' ')
+        setCopied(false)
+      }
     } else {
       addLetter(key)
     }
@@ -44,6 +64,10 @@ function Index() {
   // Handle physical keyboard
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle keyboard events when message input is focused
+      // (let the input handle its own events naturally)
+      if (isMessageFocused) return
+
       if (e.key === 'Backspace') {
         deleteLetter()
       } else if (/^[a-z]$/i.test(e.key)) {
@@ -53,7 +77,7 @@ function Index() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [addLetter, deleteLetter])
+  }, [addLetter, deleteLetter, isMessageFocused])
 
   const handleCopy = async () => {
     if (challengeUrl) {
@@ -97,6 +121,36 @@ function Index() {
               )}
             </div>
 
+            {/* Message input */}
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Optional message when solved:
+              </label>
+              <div className="flex gap-2">
+                <input
+                  ref={messageInputRef}
+                  type="text"
+                  value={message}
+                  onChange={(e) => {
+                    setMessage(e.target.value)
+                    setCopied(false)
+                  }}
+                  onFocus={() => setIsMessageFocused(true)}
+                  onBlur={() => setIsMessageFocused(false)}
+                  placeholder="Great job!"
+                  maxLength={100}
+                  className="flex-1 px-4 py-2 border-2 border-gray-300 rounded focus:border-gray-500 focus:outline-none"
+                />
+                <button
+                  onClick={() => messageInputRef.current?.blur()}
+                  className="px-4 py-2 bg-green-600 text-white rounded font-semibold hover:bg-green-700 transition-colors"
+                  title="Done"
+                >
+                  ✓
+                </button>
+              </div>
+            </div>
+
             {/* Copy challenge URL */}
             <div className="flex gap-2">
               <input
@@ -121,9 +175,11 @@ function Index() {
         </div>
 
         {/* Keyboard at bottom */}
-        <div className="pb-4">
-          <Keyboard onKeyPress={handleKeyPress} letterStates={{}} />
-        </div>
+        {!isMessageFocused && (
+          <div className="pb-4">
+            <Keyboard onKeyPress={handleKeyPress} letterStates={{}} />
+          </div>
+        )}
       </main>
     </div>
   )

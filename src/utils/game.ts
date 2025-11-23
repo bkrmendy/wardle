@@ -90,3 +90,46 @@ export function getLetterStates(
 export function getRandomWord(wordList: string[]): string {
   return wordList[Math.floor(Math.random() * wordList.length)]
 }
+
+/**
+ * Encode challenge data (word + optional message) to base64 for URL sharing
+ */
+export function encodeChallengeData(
+  word: string,
+  message?: string,
+): string {
+  const data = { word: word.toLowerCase(), message: message || '' }
+  return btoa(JSON.stringify(data))
+}
+
+/**
+ * Decode challenge data from base64 URL parameter
+ * Returns { word, message } or falls back to treating input as plain word
+ */
+export function decodeChallengeData(encoded: string): {
+  word: string
+  message: string
+} {
+  try {
+    const decoded = atob(encoded)
+    // Try to parse as JSON first (new format)
+    try {
+      const data = JSON.parse(decoded)
+      return {
+        word: data.word || '',
+        message: data.message || '',
+      }
+    } catch {
+      // Fall back to treating as plain word (old format)
+      return {
+        word: decoded,
+        message: '',
+      }
+    }
+  } catch {
+    return {
+      word: '',
+      message: '',
+    }
+  }
+}

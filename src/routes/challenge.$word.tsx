@@ -4,14 +4,14 @@ import { Header } from '@/components/Header'
 import { Board } from '@/components/Board'
 import { Keyboard } from '@/components/Keyboard'
 import { useGameState } from '@/hooks/useGameState'
-import { decodeWord, isValidWord } from '@/utils/game'
+import { decodeChallengeData, isValidWord } from '@/utils/game'
 import { WORDS } from '@/data/words'
 
 function Challenge() {
   const { word } = Route.useParams()
   const navigate = useNavigate()
 
-  const decodedWord = decodeWord(word)
+  const { word: decodedWord, message } = decodeChallengeData(word)
 
   // Validate the word
   useEffect(() => {
@@ -92,6 +92,11 @@ function Challenge() {
                 <p className="text-2xl font-bold text-green-600 mb-4">
                   You won! 🎉
                 </p>
+                {message && (
+                  <p className="text-lg text-gray-800 mb-4 italic">
+                    "{message}"
+                  </p>
+                )}
                 <button
                   onClick={() => navigate({ to: '/' })}
                   className="px-6 py-2 bg-green-600 text-white rounded font-semibold hover:bg-green-700"
